@@ -1,0 +1,17 @@
+class InvalidChaiOrder(Exception):
+    pass
+
+
+def chai_order(falvour, quantity):
+    menu = {"ginger": 20, "lemon": 10}
+    if falvour not in menu:
+        raise InvalidChaiOrder("Chai is not available")
+    if not isinstance(quantity, int):
+        raise TypeError("Quantity must be in number")
+    cost = menu[falvour]*quantity
+    print(f"Bill amount : {cost}")
+
+
+chai_order("ginger", 20)
+
+chai_order("dabur", 20)

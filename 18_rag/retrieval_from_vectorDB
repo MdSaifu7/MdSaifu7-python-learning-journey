@@ -1,0 +1,55 @@
+from langchain_openai import OpenAIEmbeddings
+from dotenv import load_dotenv
+from langchain_qdrant import QdrantVectorStore
+from openai import OpenAI
+
+load_dotenv()
+
+openai_client = OpenAI()
+
+embedding_model = OpenAIEmbeddings(
+    model="text-embedding-3-large"
+)
+
+vector_db = QdrantVectorStore.from_existing_collection(
+    # documents=chunks,
+
+    url="http://localhost:6333",
+    collection_name="learning_rag2",
+    embedding=embedding_model,
+)
+user_query = input("👉")
+
+search_results = vector_db.similarity_search(query=user_query)
+
+context = "\n\n".join(
+    f"""
+[Page {res.metadata['page']}]
+{res.page_content}
+""".strip()
+    for res in search_results
+)
+
+SYSTEM_PROMPT = f"""
+You are a helpful AI assistant answering questions from a book PDF.
+
+Rules:
+- Answer ONLY using the given context
+- If the answer is not present, clearly say so
+- Mention relevant page numbers
+- Be clear, concise, and explanatory
+
+Context:
+{context}
+"""
+print(context)
+
+
+response = openai_client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_query}
+    ]
+)
+print(f"🤖 : {response.choices[0].message.content}")
